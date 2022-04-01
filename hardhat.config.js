@@ -22,7 +22,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  solidity: "0.8.4",
+  solidity: "0.6.12",
   networks: {
     testnet: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
