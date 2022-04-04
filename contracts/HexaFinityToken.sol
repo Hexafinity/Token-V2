@@ -191,6 +191,7 @@ contract HexaFinityToken is IHexaFinity, Initializable, ContextUpgradeable, Owna
         //exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
         _isExcludedFromFee[address(this)] = true;
+        _isExcludedFromFee[_taxReceiverAddress] = true;
 
         __HexaFinity_tiers_init();
 
@@ -198,8 +199,8 @@ contract HexaFinityToken is IHexaFinity, Initializable, ContextUpgradeable, Owna
     }
 
     function __HexaFinity_tiers_init() internal initializer {
-        _defaultFees = _addTier(0, 500, 500, 0, 0, address(0), address(0));
-        _addTier(0, 200, 200, 200, 100, address(0), address(0));
+        _defaultFees = _addTier(0, 50, 50, 100, 0, address(0), address(0));
+        _addTier(0, 0, 200, 200, 100, address(0), _taxReceiverAddress);
     }
 
     function name() public view returns (string memory) {

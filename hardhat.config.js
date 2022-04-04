@@ -2,6 +2,8 @@ require("dotenv").config();
 
 require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
+require('@nomiclabs/hardhat-ethers');
+require('@openzeppelin/hardhat-upgrades');
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 
@@ -23,15 +25,27 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 module.exports = {
   solidity: "0.6.12",
+  settings: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
+  },
   networks: {
+
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      saveDeployments: true,
+    },
     testnet: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
+      chainId: 97,
       accounts: [process.env.PRIVATE_KEY],
       gasPrice: 50000000000,
-      // gasLimit: 10000000
     },
     mainnet: {
       url: "https://bsc-dataseed.binance.org/",
+      chainId: 56,
       accounts: [process.env.PRIVATE_KEY],
     }
   },
@@ -40,6 +54,12 @@ module.exports = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+    apiKey: process.env.BSCSCAN_API_KEY,
   },
+  namedAccounts: {
+    deployer: {
+      default: 0, // here this will by default take the first account as deployer
+    }
+  },
+
 };
