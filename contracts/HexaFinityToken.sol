@@ -1,18 +1,3 @@
-/**
-  
-    #HexaFinityToken features:
-    
-    Token:
-    Name: HexaFinity
-    Symbol: HEXA
-    Total supply: 600 billion
-    Decimal: 18
-    Burn rate: 1%
-    Tax rate: 2%
-    Holder rewards: 2%
-
- */
-
 pragma solidity ^0.6.12;
 // SPDX-License-Identifier: MIT
 interface IERC20 {
@@ -733,16 +718,16 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     string private _symbol = "HEXA";
     uint8 private _decimals = 18;
     
-    uint256 public _taxFee = 2; // holder reward 2%
+    uint256 public _taxFee = 2;
     uint256 private _previousTaxFee = _taxFee;
 
-    uint256 public _burnFee = 1; // burn fee 1%
+    uint256 public _burnFee = 1;
     uint256 private _previousBurnFee = _burnFee;
 
-    uint256 public _ownerFee = 2; // owner fee 1%
+    uint256 public _ownerFee = 2;
     uint256 private _previousOwnerFee = _ownerFee;
     
-    uint256 public _liquidityFee = 0; // liquidity fee 0%
+    uint256 public _liquidityFee = 0;
     uint256 private _previousLiquidityFee = _liquidityFee;
 
     address public _taxReceiverAddress;
@@ -774,11 +759,6 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     constructor (address _router, address _taxReceiver) public {
         _rOwned[_msgSender()] = _rTotal;
         
-        /*
-            testnet: 0xD99D1c33F9fC3444f8101754aBC46c52416550D1
-            mainnet: 0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F
-         */
-
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(_router); 
          // Create a uniswap pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
@@ -884,7 +864,6 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     }
 
     function excludeFromReward(address account) public onlyOwner() {
-        // require(account != 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D, 'We can not exclude Uniswap router.');
         require(!_isExcluded[account], "Account is already excluded");
         if(_rOwned[account] > 0) {
             _tOwned[account] = tokenFromReflection(_rOwned[account]);
