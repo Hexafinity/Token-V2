@@ -41,7 +41,8 @@ module.exports = {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
       chainId: 97,
       accounts: [process.env.PRIVATE_KEY],
-      gasPrice: 50000000000,
+      gas: 2100000,
+      gasPrice: 50000000000
     },
     mainnet: {
       url: "https://bsc-dataseed.binance.org/",
