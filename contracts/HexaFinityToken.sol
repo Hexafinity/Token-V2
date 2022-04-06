@@ -911,6 +911,14 @@ contract HexaFinityToken is Context, IERC20, Ownable {
         _liquidityFee = liquidityFee;
     }
    
+    function setBurnFeePercent(uint256 burnFee) external onlyOwner() {
+        _burnFee = burnFee;
+    } 
+
+    function setOwnerFeePercent(uint256 ownerFee) external onlyOwner() {
+        _ownerFee = ownerFee;
+    }
+
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(
             10**2
@@ -999,7 +1007,7 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     }
     
     function removeAllFee() private {
-        if(_taxFee == 0 && _liquidityFee == 0) return;
+        if(_taxFee == 0 && _liquidityFee == 0 && _ownerFee == 0 && _burnFee == 0) return;
         
         _previousTaxFee = _taxFee;
         _previousLiquidityFee = _liquidityFee;
