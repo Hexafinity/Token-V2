@@ -44,7 +44,7 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     address[] private _excluded;
    
     uint256 private constant MAX = ~uint256(0);
-    uint256 private _tTotal = 600 * 10**9 * 10**18;
+    uint256 private _tTotal = 6000 * 10**9 * 10**18;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
 
@@ -73,8 +73,8 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = true;
     
-    uint256 public _maxTxAmount = 3 * 10**9 * 10**18;
-    uint256 private numTokensSellToAddToLiquidity = 3 * 10**8 * 10**18;
+    uint256 public _maxTxAmount = 30 * 10**9 * 10**18;
+    uint256 private numTokensSellToAddToLiquidity = 3 * 10**9 * 10**18;
     
     event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
     event SwapAndLiquifyEnabledUpdated(bool enabled);
