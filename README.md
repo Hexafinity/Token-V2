@@ -1,7 +1,7 @@
 # HexaFinity Token
 Name: HexaFinity
 Symbol: HEXA
-Total supply: 600 billion
+Total supply: 6 trillion
 Decimal: 18
 Burn rate: 1%
 Tax rate: 2%
