@@ -582,8 +582,8 @@ contract HexaFinityToken is Context, IERC20, Ownable {
         emit Transfer(sender, _burnAddress, _amount);
     }
 
-    // function updateBurnAddress(address _newBurnAddress) external onlyOwner() {
-    //     _burnAddress = _newBurnAddress;
-    //     excludeFromReward(_newBurnAddress);
-    // }
+    function updateBurnAddress(address _newBurnAddress) external onlyOwner() {
+        _burnAddress = _newBurnAddress;
+        excludeFromReward(_newBurnAddress);
+    }
 }
