@@ -5,10 +5,10 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IUniswapV2Factory.sol";
 import "./interfaces/IUniswapV2Pair.sol";
 import "./interfaces/IUniswapV2Router02.sol";
-import "./SafeMath.sol";
-import "./Context.sol";
-import "./Address.sol";
-import "./Ownable.sol";
+import "./libraries/SafeMath.sol";
+import "./libraries/Context.sol";
+import "./libraries/Address.sol";
+import "./libraries/Ownable.sol";
 
 
 

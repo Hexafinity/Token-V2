@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.12;
 
-import "./IHexaFinity.sol";
-import "./SafeMathUpgradeable.sol";
-import "./IUniswapV2Factory.sol";
-import "./AddressUpgradeable.sol";
-import "./IUniswapV2Pair.sol";
-import "./IUniswapV2Router01.sol";
-import "./IUniswapV2Router02.sol";
-
-
-
+import "./interfaces/IHexaFinity.sol";
+import "./interfaces/IUniswapV2Factory.sol";
+import "./interfaces/IUniswapV2Pair.sol";
+import "./interfaces/IUniswapV2Router01.sol";
+import "./interfaces/IUniswapV2Router02.sol";
+import "./libraries/AddressUpgradeable.sol";
+import "./libraries/SafeMathUpgradeable.sol";
 
 abstract contract Initializable {
 
