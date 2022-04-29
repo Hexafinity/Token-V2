@@ -49,8 +49,7 @@ describe('HexaFinityToken', () => {
   });
 
   it('name, symbol, decimals, totalSupply, balanceOf', async () => {
-    const name = await token.name();
-    expect(name).to.eq('HexaFinity');
+    expect(await token.name()).to.eq('HexaFinity');
     expect(await token.symbol()).to.eq('HEXA');
     expect(await token.decimals()).to.eq(18);
     expect(await token.totalSupply()).to.eq(TOTAL_SUPPLY);
@@ -117,5 +116,14 @@ describe('HexaFinityToken', () => {
       TOTAL_SUPPLY.sub(TEST_AMOUNT),
     );
     expect(await token.balanceOf(other.address)).to.eq(TEST_AMOUNT);
+  });
+
+  it('increaseAllowance', async () => {
+    await expect(token.increaseAllowance(other.address, TEST_AMOUNT))
+      .to.emit(token, 'Approval')
+      .withArgs(wallet.address, other.address, TEST_AMOUNT);
+    expect(await token.allowance(wallet.address, other.address)).to.eq(
+      TEST_AMOUNT,
+    );
   });
 });
