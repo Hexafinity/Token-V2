@@ -118,12 +118,18 @@ describe('HexaFinityToken', () => {
     expect(await token.balanceOf(other.address)).to.eq(TEST_AMOUNT);
   });
 
-  it('increaseAllowance', async () => {
+  it('increaseAllowance, decreaseAllowance', async () => {
     await expect(token.increaseAllowance(other.address, TEST_AMOUNT))
       .to.emit(token, 'Approval')
       .withArgs(wallet.address, other.address, TEST_AMOUNT);
     expect(await token.allowance(wallet.address, other.address)).to.eq(
       TEST_AMOUNT,
+    );
+    await expect(token.decreaseAllowance(other.address, TEST_AMOUNT))
+      .to.emit(token, 'Approval')
+      .withArgs(wallet.address, other.address, 0);
+    expect(await token.allowance(wallet.address, other.address)).to.eq(
+      0,
     );
   });
 });
