@@ -1,6 +1,6 @@
 /* eslint-disable node/no-missing-import */
 import chai, { expect } from 'chai';
-import { Contract } from 'ethers';
+import { Contract, constants } from 'ethers';
 import {
   solidity,
   MockProvider,
@@ -94,6 +94,24 @@ describe('HexaFinityToken', () => {
       .withArgs(wallet.address, other.address, TEST_AMOUNT);
     expect(await token.allowance(wallet.address, other.address)).to.eq(
       0,
+    );
+    expect(await token.balanceOf(wallet.address)).to.eq(
+      TOTAL_SUPPLY.sub(TEST_AMOUNT),
+    );
+    expect(await token.balanceOf(other.address)).to.eq(TEST_AMOUNT);
+  });
+
+  it('transferFrom:max', async () => {
+    await token.approve(other.address, constants.MaxUint256);
+    await expect(
+      token
+        .connect(other)
+        .transferFrom(wallet.address, other.address, TEST_AMOUNT),
+    )
+      .to.emit(token, 'Transfer')
+      .withArgs(wallet.address, other.address, TEST_AMOUNT);
+    expect(await token.allowance(wallet.address, other.address)).to.eq(
+      constants.MaxUint256.sub(TEST_AMOUNT),
     );
     expect(await token.balanceOf(wallet.address)).to.eq(
       TOTAL_SUPPLY.sub(TEST_AMOUNT),
