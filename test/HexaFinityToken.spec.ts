@@ -32,7 +32,7 @@ describe('HexaFinityToken', () => {
       gasLimit: 9999999,
     },
   });
-  const [wallet, taxReceiver] = provider.getWallets();
+  const [wallet, taxReceiver, other] = provider.getWallets();
   const loadFixture = createFixtureLoader([wallet]);
 
   let router: Contract;
@@ -55,5 +55,14 @@ describe('HexaFinityToken', () => {
     expect(await token.decimals()).to.eq(18);
     expect(await token.totalSupply()).to.eq(TOTAL_SUPPLY);
     expect(await token.balanceOf(wallet.address)).to.eq(TOTAL_SUPPLY);
+  });
+
+  it('approve', async () => {
+    await expect(token.approve(other.address, TEST_AMOUNT))
+      .to.emit(token, 'Approval')
+      .withArgs(wallet.address, other.address, TEST_AMOUNT);
+    expect(await token.allowance(wallet.address, other.address)).to.eq(
+      TEST_AMOUNT,
+    );
   });
 });
