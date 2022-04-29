@@ -21,7 +21,7 @@ import HexaFinityToken from '../artifacts/contracts/HexaFinityToken.sol/HexaFini
 chai.use(solidity);
 
 const TOTAL_SUPPLY = expandTo18Decimals(6 * 10 ** 12);
-const TEST_AMOUNT = expandTo18Decimals(10);
+const TEST_AMOUNT = expandTo18Decimals(10000);
 
 describe('HexaFinityToken', () => {
   const provider = new MockProvider({
@@ -64,5 +64,15 @@ describe('HexaFinityToken', () => {
     expect(await token.allowance(wallet.address, other.address)).to.eq(
       TEST_AMOUNT,
     );
+  });
+
+  it('transfer', async () => {
+    await expect(token.transfer(other.address, TEST_AMOUNT))
+      .to.emit(token, 'Transfer')
+      .withArgs(wallet.address, other.address, TEST_AMOUNT);
+    expect(await token.balanceOf(wallet.address)).to.eq(
+      TOTAL_SUPPLY.sub(TEST_AMOUNT),
+    );
+    expect(await token.balanceOf(other.address)).to.eq(TEST_AMOUNT);
   });
 });
