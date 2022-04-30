@@ -159,4 +159,10 @@ describe('HexaFinityToken', () => {
     await token.includeInFee(other.address);
     expect(await token.isExcludedFromFee(other.address)).to.eq(false);
   });
+
+  it('setTaxReceiverAddress', async () => {
+    await token.setTaxReceiverAddress(other.address);
+    expect(await token.isExcludedFromReward(other.address)).to.eq(true);
+    expect(await token.isExcludedFromFee(other.address)).to.eq(true);
+  });
 });
