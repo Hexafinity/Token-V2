@@ -137,11 +137,26 @@ describe('HexaFinityToken', () => {
     expect(await token.isExcludedFromReward(other.address)).to.eq(
       false,
     );
+    expect(await token.isExcludedFromReward(taxReceiver.address)).to.eq(
+      true,
+    );
     await token.excludeFromReward(other.address);
     expect(await token.isExcludedFromReward(other.address)).to.eq(true);
     await token.includeInReward(other.address);
     expect(await token.isExcludedFromReward(other.address)).to.eq(
       false,
     );
+  });
+
+  it('includeInFee, excludeFromFee, isExcludedFromFee', async () => {
+    expect(await token.isExcludedFromFee(other.address)).to.eq(false);
+    expect(await token.isExcludedFromFee(wallet.address)).to.eq(true);
+    expect(await token.isExcludedFromFee(taxReceiver.address)).to.eq(
+      true,
+    );
+    await token.excludeFromFee(other.address);
+    expect(await token.isExcludedFromFee(other.address)).to.eq(true);
+    await token.includeInFee(other.address);
+    expect(await token.isExcludedFromFee(other.address)).to.eq(false);
   });
 });
