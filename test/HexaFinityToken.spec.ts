@@ -165,4 +165,10 @@ describe('HexaFinityToken', () => {
     expect(await token.isExcludedFromReward(other.address)).to.eq(true);
     expect(await token.isExcludedFromFee(other.address)).to.eq(true);
   });
+
+  it('setSwapAndLiquifyEnabled', async () => {
+    expect(await token.setSwapAndLiquifyEnabled(false))
+      .to.emit(token, 'SwapAndLiquifyEnabledUpdated')
+      .withArgs(false);
+  });
 });
