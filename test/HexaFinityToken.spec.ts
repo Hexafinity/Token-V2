@@ -132,4 +132,16 @@ describe('HexaFinityToken', () => {
       0,
     );
   });
+
+  it('includeInReward, excludeFromReward, isExcludedFromReward', async () => {
+    expect(await token.isExcludedFromReward(other.address)).to.eq(
+      false,
+    );
+    await token.excludeFromReward(other.address);
+    expect(await token.isExcludedFromReward(other.address)).to.eq(true);
+    await token.includeInReward(other.address);
+    expect(await token.isExcludedFromReward(other.address)).to.eq(
+      false,
+    );
+  });
 });
