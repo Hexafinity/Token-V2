@@ -251,6 +251,7 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     function setTaxReceiverAddress(address _taxReceiver) external onlyOwner() {
         require(_taxReceiver != address(0), "HEXA: Address Zero is not allowed");
         excludeFromReward(_taxReceiver);
+        excludeFromFee(_taxReceiver);
         _taxReceiverAddress = _taxReceiver;
     }
 
