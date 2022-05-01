@@ -242,7 +242,7 @@ contract HexaFinityTokenUpgradable is IHexaFinity, Initializable, ContextUpgrade
         _liquidityFee = 0;
         _previousLiquidityFee = _liquidityFee;
 
-        _tTotal = 600 * 10**9 * 10**18;
+        _tTotal = 6000 * 10**9 * 10**18;
         _rTotal = (MAX - (MAX % _tTotal));
         
         _maxTxAmount = 3 * 10**9 * 10**18; // set 0.005% of total
@@ -253,9 +253,6 @@ contract HexaFinityTokenUpgradable is IHexaFinity, Initializable, ContextUpgrade
         _initializerAccount = _msgSender();
 
         _rOwned[_initializerAccount] = _rTotal;
-
-        _maxTxAmount = 3 * 10**9 * 10**18;
-        numTokensSellToAddToLiquidity = 3 * 10**8 * 10**18;
 
         swapAndLiquifyEnabled = true;
 
