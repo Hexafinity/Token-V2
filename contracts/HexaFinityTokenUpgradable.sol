@@ -4,7 +4,6 @@ pragma solidity ^0.6.12;
 import "./interfaces/IHexaFinity.sol";
 import "./interfaces/IUniswapV2Factory.sol";
 import "./interfaces/IUniswapV2Pair.sol";
-import "./interfaces/IUniswapV2Router01.sol";
 import "./interfaces/IUniswapV2Router02.sol";
 import "./libraries/AddressUpgradeable.sol";
 import "./libraries/SafeMathUpgradeable.sol";
@@ -138,7 +137,7 @@ abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
 
 
 
-contract HexaFinityTokenUpgradable is IHexaFinity, Initializable, ContextUpgradeable, OwnableUpgradeable {
+contract HexaFinityTokenUpgradable is IHexaFinity, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
     using AddressUpgradeable for address;
 
@@ -249,7 +248,7 @@ contract HexaFinityTokenUpgradable is IHexaFinity, Initializable, ContextUpgrade
         numTokensSellToAddToLiquidity = 3 * 10**8 * 10**18; // 10% of maxTxAmount
 
         _burnAddress = 0x000000000000000000000000000000000000dEaD;
-        _taxReceiverAddress = _taxReceiver;
+        
         _initializerAccount = _msgSender();
 
         _rOwned[_initializerAccount] = _rTotal;
@@ -257,7 +256,7 @@ contract HexaFinityTokenUpgradable is IHexaFinity, Initializable, ContextUpgrade
         swapAndLiquifyEnabled = true;
 
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(_router); 
-         // Create a uniswap pair for this new token
+        // Create a uniswap pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
 
@@ -423,6 +422,7 @@ contract HexaFinityTokenUpgradable is IHexaFinity, Initializable, ContextUpgrade
     function setTaxReceiverAddress(address _taxReceiver) external onlyOwner() {
         require(_taxReceiver != address(0), "HEXA: Address Zero is not allowed");
         excludeFromReward(_taxReceiver);
+        excludeFromFee(_taxReceiver);
         _taxReceiverAddress = _taxReceiver;
     }
 
@@ -453,13 +453,13 @@ contract HexaFinityTokenUpgradable is IHexaFinity, Initializable, ContextUpgrade
     }
 
     function _getTValues(uint256 tAmount) private view returns (tFeeValues memory) {
-        uint256 tFee = calculateTaxFee(tAmount);
-        uint256 tLiquidity = calculateLiquidityFee(tAmount);
-        uint256 tBurn = calculateBurnFee(tAmount);
-        uint256 tOwner = calculateOwnerFee(tAmount);
+        (uint256 calculateTaxFee, , ,)  = calculateFee(tAmount);
+        ( , uint256 calculateLiquidityFee, , )  = calculateFee(tAmount);
+        ( , , uint256 calculateBurnFee, )  = calculateFee(tAmount);
+        ( , , , uint256 calculateOwnerFee)  = calculateFee(tAmount);
 
-        uint256 tTransferAmount = tAmount.sub(tFee).sub(tLiquidity).sub(tBurn).sub(tOwner);
-        return tFeeValues(tTransferAmount, tFee, tLiquidity, tOwner, tBurn);
+        uint256 tTransferAmount = tAmount.sub(calculateTaxFee).sub(calculateLiquidityFee).sub(calculateBurnFee).sub(calculateOwnerFee);
+        return tFeeValues(tTransferAmount, calculateTaxFee, calculateLiquidityFee, calculateBurnFee, calculateOwnerFee);
     }
 
     function _getRValues(uint256 tAmount, uint256 tFee, uint256 tTransferFee, uint256 currentRate) private pure returns (uint256, uint256, uint256) {
@@ -487,30 +487,21 @@ contract HexaFinityTokenUpgradable is IHexaFinity, Initializable, ContextUpgrade
         if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
         return (rSupply, tSupply);
     }
-    
-    function calculateTaxFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_taxFee).div(
+
+    function calculateFee(uint256 tAmount) private view returns(uint256, uint256, uint256, uint256){
+        uint256 calculateTaxFee = tAmount.mul(_taxFee).div(
             10**2
         );
-    }
-
-    function calculateOwnerFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_ownerFee).div(
+        uint256 calculateOwnerFee = tAmount.mul(_ownerFee).div(
             10**2
         );
-    }
-
-    function calculateBurnFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_burnFee).div(
+        uint256 calculateBurnFee = tAmount.mul(_burnFee).div(
             10**2
         );
-    }
-
-
-    function calculateLiquidityFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_liquidityFee).div(
+        uint256 calculateLiquidityFee = tAmount.mul(_liquidityFee).div(
             10**2
-        );
+        ); 
+        return(calculateTaxFee, calculateOwnerFee, calculateBurnFee, calculateLiquidityFee);
     }
     
     function removeAllFee() private {
