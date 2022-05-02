@@ -9,10 +9,7 @@ import {
 } from 'ethereum-waffle';
 // import { ecsign } from 'ethereumjs-util';
 
-import {
-  expandTo18Decimals,
-  getApprovalDigest,
-} from './shared/utilities';
+import { expandTo18Decimals } from './shared/utilities';
 
 import { routerFixture } from './shared/fixtures';
 

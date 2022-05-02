@@ -2,7 +2,7 @@ import { Contract, Wallet } from 'ethers';
 import { deployContract } from 'ethereum-waffle';
 
 import UniswapFactory from '@uniswap/v2-core/build/UniswapV2Factory.json';
-import UniswapRouter from '../../artifacts/contracts/UniswapV2Router02.sol/UniswapV2Router02.json';
+import UniswapRouter from '../../artifacts/contracts/test/UniswapV2Router02.sol/UniswapV2Router02.json';
 import WETH9 from '../../artifacts/contracts/test/WETH9.sol/WETH9.json';
 
 const overrides = {
