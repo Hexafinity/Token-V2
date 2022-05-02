@@ -1,4 +1,4 @@
-// works for deployment to rinkeby
+// works for deployment to bsctest
 const { ethers, upgrades } = require('hardhat');
 
 async function main() {
@@ -30,8 +30,10 @@ async function main() {
 }
 
 main()
+  // eslint-disable-next-line no-process-exit
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
+    // eslint-disable-next-line no-process-exit
     process.exit(1);
   });
