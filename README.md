@@ -24,14 +24,34 @@ npx hardhat run --network mainnet scripts/1_hexa_deploy.js
 npx hardhat verify --network mainnet <address_deployed> <constructor arg 1 - router address> <constructor arg 2 - tax receiver address>
 ```
 
+## Compile
+```shell
+npm run compile
+```
+
 ## Test
 
 ```shell
-npx hardhat test
+npm run test
 ```
 
 ## Clean
 
 ```shell
-npx hardhat clean
+npm run clean
+```
+
+## lint
+```shell
+npm run lint
+```
+
+## lint fix
+```shell
+npm run lint:fix
+```
+
+## format fix
+```shell
+npm run format:fix
 ```
