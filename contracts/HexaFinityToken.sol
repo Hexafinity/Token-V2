@@ -94,7 +94,7 @@ contract HexaFinityToken is Context, IERC20, Ownable {
         _rOwned[_msgSender()] = _rTotal;
         
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(_router); 
-         // Create a uniswap pair for this new token
+        // Create a uniswap pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
 
@@ -282,18 +282,6 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     }
 
     function _getTValues(uint256 tAmount) private view returns (tFeeValues memory) {
-        // uint256 tFee = calculateTaxFee(tAmount);
-        // uint256 tLiquidity = calculateLiquidityFee(tAmount);
-        // uint256 tBurn = calculateBurnFee(tAmount);
-        // uint256 tOwner = calculateOwnerFee(tAmount);
-
-        // uint256 tTransferAmount = tAmount.sub(tFee).sub(tLiquidity).sub(tBurn).sub(tOwner);
-        // return tFeeValues(tTransferAmount, tFee, tLiquidity, tOwner, tBurn);
-
-        // uint256 abcFee = calculateFee(tAmount);
-        // uint256 tTransferAmount = tAmount.sub(abcFee);   
-        // return tFeeValues(tTransferAmount, abcFee);
-
         (uint256 calculateTaxFee, , ,)  = calculateFee(tAmount);
         ( , uint256 calculateLiquidityFee, , )  = calculateFee(tAmount);
         ( , , uint256 calculateBurnFee, )  = calculateFee(tAmount);
@@ -329,7 +317,6 @@ contract HexaFinityToken is Context, IERC20, Ownable {
         return (rSupply, tSupply);
     }
 
-
     function calculateFee(uint256 tAmount) private view returns(uint256, uint256, uint256, uint256){
         uint256 calculateTaxFee = tAmount.mul(_taxFee).div(
             10**2
@@ -345,31 +332,6 @@ contract HexaFinityToken is Context, IERC20, Ownable {
         ); 
         return(calculateTaxFee, calculateOwnerFee, calculateBurnFee, calculateLiquidityFee);
     }
-    
-    // function calculateTaxFee(uint256 _amount) private view returns (uint256) {
-    //     return _amount.mul(_taxFee).div(
-    //         10**2
-    //     );
-    // }
-
-    // function calculateOwnerFee(uint256 _amount) private view returns (uint256) {
-    //     return _amount.mul(_ownerFee).div(
-    //         10**2
-    //     );
-    // }
-
-    // function calculateBurnFee(uint256 _amount) private view returns (uint256) {
-    //     return _amount.mul(_burnFee).div(
-    //         10**2
-    //     );
-    // }
-
-
-    // function calculateLiquidityFee(uint256 _amount) private view returns (uint256) {
-    //     return _amount.mul(_liquidityFee).div(
-    //         10**2
-    //     );
-    // }
     
     function removeAllFee() private {
         if(_taxFee == 0 && _liquidityFee == 0 && _ownerFee == 0 && _burnFee == 0) return;
