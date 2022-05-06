@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.12;
 
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
+import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
+
 import "./interfaces/IERC20.sol";
-import "./interfaces/IUniswapV2Factory.sol";
-import "./interfaces/IUniswapV2Pair.sol";
-import "./interfaces/IUniswapV2Router02.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/Context.sol";
 import "./libraries/Address.sol";
