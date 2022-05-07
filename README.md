@@ -59,3 +59,6 @@ npm run lint:fix
 ```shell
 npm run format:fix
 ```
+
+## HexaFinityTokenUpgradable address
+0xBABE0ef140F02b77b26039a91d3b003F2445CD87
