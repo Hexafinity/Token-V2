@@ -53,13 +53,13 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     string private _symbol = "HEXA";
     uint8 private _decimals = 18;
     
-    uint256 public _taxFee = 2;
+    uint256 public _taxFee = 3;
     uint256 private _previousTaxFee = _taxFee;
 
-    uint256 public _burnFee = 1;
+    uint256 public _burnFee = 10;
     uint256 private _previousBurnFee = _burnFee;
 
-    uint256 public _ownerFee = 2;
+    uint256 public _ownerFee = 20;
     uint256 private _previousOwnerFee = _ownerFee;
     
     uint256 public _liquidityFee = 0;
@@ -258,7 +258,7 @@ contract HexaFinityToken is Context, IERC20, Ownable {
 
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(
-            10**2
+            10**3
         );
     }
 
@@ -320,16 +320,16 @@ contract HexaFinityToken is Context, IERC20, Ownable {
 
     function calculateFee(uint256 tAmount) private view returns(uint256, uint256, uint256, uint256){
         uint256 calculateTaxFee = tAmount.mul(_taxFee).div(
-            10**2
+            10**3
         );
         uint256 calculateOwnerFee = tAmount.mul(_ownerFee).div(
-            10**2
+            10**3
         );
         uint256 calculateBurnFee = tAmount.mul(_burnFee).div(
-            10**2
+            10**3
         );
         uint256 calculateLiquidityFee = tAmount.mul(_liquidityFee).div(
-            10**2
+            10**3
         ); 
         return(calculateTaxFee, calculateOwnerFee, calculateBurnFee, calculateLiquidityFee);
     }
