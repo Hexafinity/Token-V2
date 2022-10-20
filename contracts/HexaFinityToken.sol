@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.6.12;
+pragma solidity ^0.8.14;
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
@@ -91,7 +91,7 @@ contract HexaFinityToken is Context, IERC20, Ownable {
         inSwapAndLiquify = false;
     }
     
-    constructor (address _router, address _taxReceiver) public {
+    constructor (address _router, address _taxReceiver) {
         _rOwned[_msgSender()] = _rTotal;
         
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(_router); 
