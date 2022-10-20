@@ -53,13 +53,13 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     string private _symbol = "HEXA";
     uint8 private _decimals = 18;
     
-    uint256 public _taxFee = 3;
+    uint256 public _taxFee = 1;
     uint256 private _previousTaxFee = _taxFee;
 
     uint256 public _burnFee = 10;
     uint256 private _previousBurnFee = _burnFee;
 
-    uint256 public _ownerFee = 20;
+    uint256 public _ownerFee = 3;
     uint256 private _previousOwnerFee = _ownerFee;
     
     uint256 public _liquidityFee = 0;

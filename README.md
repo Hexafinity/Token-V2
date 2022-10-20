@@ -6,7 +6,7 @@ Total supply: 6 trillion
 Decimal: 18
 Burn rate: 1%
 Tax rate: 0.3%
-Holder rewards: 1%
+Holder rewards: 0.1%
 
 ## Deploy HexaFinity Token to network and verify
 
