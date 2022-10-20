@@ -94,13 +94,13 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
     _symbol = "HEXA";
     _decimals = 18;
 
-    _taxFee = 2;
+    _taxFee = 3;
     _previousTaxFee = _taxFee;
 
-    _burnFee = 1;
+    _burnFee = 10;
     _previousBurnFee = _burnFee;
 
-    _ownerFee = 2;
+    _ownerFee = 20;
     _previousOwnerFee = _ownerFee;
 
     _liquidityFee = 0;
@@ -320,7 +320,7 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
   }
 
   function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner {
-    _maxTxAmount = _tTotal.mul(maxTxPercent).div(10**2);
+    _maxTxAmount = _tTotal.mul(maxTxPercent).div(10**3);
   }
 
   function setSwapAndLiquifyEnabled(bool _enabled) public onlyOwner {
@@ -429,10 +429,10 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
       uint256
     )
   {
-    uint256 calculateTaxFee = tAmount.mul(_taxFee).div(10**2);
-    uint256 calculateOwnerFee = tAmount.mul(_ownerFee).div(10**2);
-    uint256 calculateBurnFee = tAmount.mul(_burnFee).div(10**2);
-    uint256 calculateLiquidityFee = tAmount.mul(_liquidityFee).div(10**2);
+    uint256 calculateTaxFee = tAmount.mul(_taxFee).div(10**3);
+    uint256 calculateOwnerFee = tAmount.mul(_ownerFee).div(10**3);
+    uint256 calculateBurnFee = tAmount.mul(_burnFee).div(10**3);
+    uint256 calculateLiquidityFee = tAmount.mul(_liquidityFee).div(10**3);
     return (calculateTaxFee, calculateOwnerFee, calculateBurnFee, calculateLiquidityFee);
   }
 

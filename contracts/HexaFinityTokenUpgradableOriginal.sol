@@ -230,13 +230,13 @@ contract HexaFinityTokenUpgradable is IHexaFinity, OwnableUpgradeable {
         _symbol = "HEXA";
         _decimals = 18;
 
-        _taxFee = 2;
+        _taxFee = 3;
         _previousTaxFee = _taxFee;
 
-        _burnFee = 1;
+        _burnFee = 10;
         _previousBurnFee = _burnFee;
 
-        _ownerFee = 2;
+        _ownerFee = 20;
         _previousOwnerFee = _ownerFee;
         
         _liquidityFee = 0;
@@ -429,7 +429,7 @@ contract HexaFinityTokenUpgradable is IHexaFinity, OwnableUpgradeable {
 
     function setMaxTxPercent(uint256 maxTxPercent) external onlyOwner() {
         _maxTxAmount = _tTotal.mul(maxTxPercent).div(
-            10**2
+            10**3
         );
     }
 
@@ -491,16 +491,16 @@ contract HexaFinityTokenUpgradable is IHexaFinity, OwnableUpgradeable {
 
     function calculateFee(uint256 tAmount) private view returns(uint256, uint256, uint256, uint256){
         uint256 calculateTaxFee = tAmount.mul(_taxFee).div(
-            10**2
+            10**3
         );
         uint256 calculateOwnerFee = tAmount.mul(_ownerFee).div(
-            10**2
+            10**3
         );
         uint256 calculateBurnFee = tAmount.mul(_burnFee).div(
-            10**2
+            10**3
         );
         uint256 calculateLiquidityFee = tAmount.mul(_liquidityFee).div(
-            10**2
+            10**3
         ); 
         return(calculateTaxFee, calculateOwnerFee, calculateBurnFee, calculateLiquidityFee);
     }
