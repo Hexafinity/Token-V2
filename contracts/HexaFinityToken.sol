@@ -284,12 +284,12 @@ contract HexaFinityToken is Context, IERC20, Ownable {
 
     function _getTValues(uint256 tAmount) private view returns (tFeeValues memory) {
         (uint256 calculateTaxFee, , ,)  = calculateFee(tAmount);
-        ( , uint256 calculateLiquidityFee, , )  = calculateFee(tAmount);
+        ( , uint256 calculateOwnerFee, , )  = calculateFee(tAmount);
         ( , , uint256 calculateBurnFee, )  = calculateFee(tAmount);
-        ( , , , uint256 calculateOwnerFee)  = calculateFee(tAmount);
+        ( , , , uint256 calculateLiquidityFee)  = calculateFee(tAmount);
 
         uint256 tTransferAmount = tAmount.sub(calculateTaxFee).sub(calculateLiquidityFee).sub(calculateBurnFee).sub(calculateOwnerFee);
-        return tFeeValues(tTransferAmount, calculateTaxFee, calculateLiquidityFee, calculateBurnFee, calculateOwnerFee);
+        return tFeeValues(tTransferAmount, calculateTaxFee, calculateLiquidityFee, calculateOwnerFee, calculateBurnFee);
     }
 
     function _getRValues(uint256 tAmount, uint256 tFee, uint256 tTransferFee, uint256 currentRate) private pure returns (uint256, uint256, uint256) {

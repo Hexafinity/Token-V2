@@ -230,13 +230,13 @@ contract HexaFinityTokenUpgradable is IHexaFinity, OwnableUpgradeable {
         _symbol = "HEXA";
         _decimals = 18;
 
-        _taxFee = 3;
+        _taxFee = 1;
         _previousTaxFee = _taxFee;
 
         _burnFee = 10;
         _previousBurnFee = _burnFee;
 
-        _ownerFee = 20;
+        _ownerFee = 3;
         _previousOwnerFee = _ownerFee;
         
         _liquidityFee = 0;
@@ -455,12 +455,12 @@ contract HexaFinityTokenUpgradable is IHexaFinity, OwnableUpgradeable {
 
     function _getTValues(uint256 tAmount) private view returns (tFeeValues memory) {
         (uint256 calculateTaxFee, , ,)  = calculateFee(tAmount);
-        ( , uint256 calculateLiquidityFee, , )  = calculateFee(tAmount);
+        ( , uint256 calculateOwnerFee, , )  = calculateFee(tAmount);
         ( , , uint256 calculateBurnFee, )  = calculateFee(tAmount);
-        ( , , , uint256 calculateOwnerFee)  = calculateFee(tAmount);
+        ( , , , uint256 calculateLiquidityFee)  = calculateFee(tAmount);
 
         uint256 tTransferAmount = tAmount.sub(calculateTaxFee).sub(calculateLiquidityFee).sub(calculateBurnFee).sub(calculateOwnerFee);
-        return tFeeValues(tTransferAmount, calculateTaxFee, calculateLiquidityFee, calculateBurnFee, calculateOwnerFee);
+        return tFeeValues(tTransferAmount, calculateTaxFee, calculateLiquidityFee, calculateOwnerFee, calculateBurnFee);
     }
 
     function _getRValues(uint256 tAmount, uint256 tFee, uint256 tTransferFee, uint256 currentRate) private pure returns (uint256, uint256, uint256) {
