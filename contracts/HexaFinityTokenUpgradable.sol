@@ -360,9 +360,9 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
 
   function _getTValues(uint256 tAmount) private view returns (tFeeValues memory) {
     (uint256 calculateTaxFee, , , ) = calculateFee(tAmount);
-    (, uint256 calculateLiquidityFee, , ) = calculateFee(tAmount);
+    (, uint256 calculateOwnerFee, , ) = calculateFee(tAmount);
     (, , uint256 calculateBurnFee, ) = calculateFee(tAmount);
-    (, , , uint256 calculateOwnerFee) = calculateFee(tAmount);
+    (, , , uint256 calculateLiquidityFee) = calculateFee(tAmount);
 
     uint256 tTransferAmount = tAmount
       .sub(calculateTaxFee)
@@ -374,8 +374,8 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
         tTransferAmount,
         calculateTaxFee,
         calculateLiquidityFee,
-        calculateBurnFee,
-        calculateOwnerFee
+        calculateOwnerFee,
+        calculateBurnFee
       );
   }
 
