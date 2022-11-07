@@ -138,7 +138,7 @@ abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
 
 
 
-contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
+contract HexaFinityTokenUpgradable is IHexaFinity, OwnableUpgradeable {
     using SafeMathUpgradeable for uint256;
     using AddressUpgradeable for address;
 
