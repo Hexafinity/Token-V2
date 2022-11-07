@@ -53,13 +53,13 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     string private _symbol = "HEXA";
     uint8 private _decimals = 18;
     
-    uint256 public _taxFee = 3;
+    uint256 public _taxFee = 6;
     uint256 private _previousTaxFee = _taxFee;
 
     uint256 public _burnFee = 10;
     uint256 private _previousBurnFee = _burnFee;
 
-    uint256 public _ownerFee = 20;
+    uint256 public _ownerFee = 3;
     uint256 private _previousOwnerFee = _ownerFee;
     
     uint256 public _liquidityFee = 0;
@@ -284,12 +284,12 @@ contract HexaFinityToken is Context, IERC20, Ownable {
 
     function _getTValues(uint256 tAmount) private view returns (tFeeValues memory) {
         (uint256 calculateTaxFee, , ,)  = calculateFee(tAmount);
-        ( , uint256 calculateLiquidityFee, , )  = calculateFee(tAmount);
+        ( , uint256 calculateOwnerFee, , )  = calculateFee(tAmount);
         ( , , uint256 calculateBurnFee, )  = calculateFee(tAmount);
-        ( , , , uint256 calculateOwnerFee)  = calculateFee(tAmount);
+        ( , , , uint256 calculateLiquidityFee)  = calculateFee(tAmount);
 
         uint256 tTransferAmount = tAmount.sub(calculateTaxFee).sub(calculateLiquidityFee).sub(calculateBurnFee).sub(calculateOwnerFee);
-        return tFeeValues(tTransferAmount, calculateTaxFee, calculateLiquidityFee, calculateBurnFee, calculateOwnerFee);
+        return tFeeValues(tTransferAmount, calculateTaxFee, calculateLiquidityFee, calculateOwnerFee, calculateBurnFee);
     }
 
     function _getRValues(uint256 tAmount, uint256 tFee, uint256 tTransferFee, uint256 currentRate) private pure returns (uint256, uint256, uint256) {
