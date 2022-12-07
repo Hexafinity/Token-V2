@@ -25,6 +25,12 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
+    hardhat: {
+      forking: {
+        url: "https://bsc-dataseed.binance.org/",
+        enabled: true,
+      }
+    },
     localhost: {
       url: 'http://127.0.0.1:8545',
       // saveDeployments: true,
