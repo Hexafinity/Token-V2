@@ -6,7 +6,7 @@ import { expandTo18Decimals } from './shared/utilities';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import UniswapV2Router02 from "./V2/UniswapV2Router02.json"
 
-describe("Integration tests", () => {
+describe("Integration tests for original token", () => {
     let token: Contract;
     let admin: SignerWithAddress;
     let taxReceiver: SignerWithAddress;
@@ -18,14 +18,8 @@ describe("Integration tests", () => {
     const TEST_AMOUNT = expandTo18Decimals(10000);
     beforeEach(async function () {
         [admin, taxReceiver, user0, user1, user2] = await hre.ethers.getSigners();
-        const TokenContract = await hre.ethers.getContractFactory("contracts/HexaFinityTokenUpgradable.sol:HexaFinityTokenUpgradable");
-        token = await hre.upgrades.deployProxy(
-            TokenContract,
-            [
-                ROUTER,
-                taxReceiver.address
-            ]
-        );
+        const TokenContract = await hre.ethers.getContractFactory("contracts/HexaFinityToken.sol:HexaFinityToken");
+        token = await TokenContract.deploy(ROUTER, taxReceiver.address);
         await token.deployed();
     });
 
@@ -35,7 +29,10 @@ describe("Integration tests", () => {
             .withArgs(admin.address, user0.address, TEST_AMOUNT);
         let transferAmount = expandTo18Decimals(1)
         await token.connect(user0).transfer(user1.address, transferAmount);
-        expect(await token.balanceOf(user0.address)).to.eq(TEST_AMOUNT.sub(transferAmount));
+        expect(await token.balanceOf(taxReceiver.address)).to.gt(0);
+        let user1_balance = await token.balanceOf(taxReceiver.address);
+        await token.connect(user0).transfer(user2.address, transferAmount);
+        expect(await token.balanceOf(user1.address)).to.gt(user1_balance);
     });
 
     it('addLiquidityToPancakeSwap', async () => {
