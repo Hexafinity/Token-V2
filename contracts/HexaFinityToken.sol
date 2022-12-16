@@ -121,6 +121,12 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
         //exclude owner and this contract from fee
         _isExcludedFromFee[owner()] = true;
         _isExcludedFromFee[address(this)] = true;
+        _isExcludedFromFee[_taxFeeAddress] = true;
+
+        //exclude tax receiver and burn address from reward
+        excludeFromReward(taxFeeAddress);
+        excludeFromReward(BURN_ADDRESS);
+        excludeFromReward(pancakeswapV2Pair);
 
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
@@ -485,9 +491,9 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
 
         //Send transfers to burn address and development wallet
         if (burnAmt> 0)
-            _transferStandard(sender, BURN_ADDRESS, burnAmt);
+            _transferToExcluded(sender, BURN_ADDRESS, burnAmt);
         if (taxFeeAmt>0)
-            _transferStandard(sender, taxFeeAddress, taxFeeAmt);
+            _transferToExcluded(sender, taxFeeAddress, taxFeeAmt);
 
         //Restore reward and liquidity fees
         _rewardFee = _previousRewardFee;
