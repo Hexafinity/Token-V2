@@ -1,0 +1,243 @@
+MAX = 115792089237316195423570985008687907853269984665640564039457584007913129639935
+
+- _tTotal = 6000000000000000000000000000000
+
+- _rTotal = MAX - (MAX % _tTotal)
+
+- MAX % _tTotal = 115792089237316195423570985008687907853269984665640564039457584007913129639935 % 6000000000000000000000000000000
+
+- MAX % _tTotal = 1640564039457584007913129639935
+
+- _rTotal = 115792089237316195423570985008687907853269984665640564039457584007913129639935 - 1640564039457584007913129639935
+
+- _rTotal = 115792089237316195423570985008687907853269984664000000000000000000000000000000
+
+- _maxTxAmount = 30000000000000000000
+
+- numTokensSellToAddToLiquidity = 30000000000000000000
+
+- _rewardFee = 1;
+- _burnFee = 3;
+- _taxFee = 6;
+- _liquidityFee = 0;
+
+- RATE_DENOMINATOR = 10**3
+- RATE_DENOMINATOR = 1000
+
+In the contract constructor:
+- owners reflection balance is set to the total reflection (_rTotal)
+
+- _rOwned[owner] = _rTotal
+
+- _rOwned[owner] = 115792089237316195423570985008687907853269984664000000000000000000000000000000
+
+Let's start by getting the balance of the owner because owner has _rTotal as their reflection balance
+
+- balanceOf checks if the account is excluded from reward
+- if true, it returns the _tOwned balance of the account
+- but owner is not excluded from rewards
+- _isExcluded[owner] will return false
+- this will proceed to tokenFromReflection function
+
+- Looking into the tokenFromReflection function which takes the rAmount of the owner
+- inside the tokenFromReflection function
+- it requires that rAmount is less than or equal to _rTotal
+- then it calls the _getRate() function which returns the currentRate
+
+- Looking into the _getRate() function
+- the get rate function calls another function _getCurrentSupply which returns the rSupply and tSupply
+- rSupply = _rTotal
+- tSupply = _tTotal
+- then the currentRate is derived by dividing the rSupply by tSupply
+- currentRate = rSupply / tSupply
+- _rTotal = 115792089237316195423570985008687907853269984664000000000000000000000000000000
+
+- rSupply = 115792089237316195423570985008687907853269984664000000000000000000000000000000
+
+- _tTotal = 6000000000000000000000000000000
+- tSupply = 6000000000000000000000000000000
+
+- currentRate = 115792089237316195423570985008687907853269984664000000000000000000000000000000 / 6000000000000000000000000000000
+
+- currentRate = 19298681539552699237261830834781317975544997444
+
+- balanceOf(address) = rAmount / currentRate
+- balanceOf(owner) = 115792089237316195423570985008687907853269984664000000000000000000000000000000 / 19298681539552699237261830834781317975544997444
+
+- balanceOf(owner) = 6000000000000000000000000000000
+
+
+Understanding HexaFinityToken transfer and how the reflection reward arr reflected in accounts
+
+- We would be working with 100 HexaFinityToken
+- which is 100000000000 HexaFinityToken
+- Starting point is the transfer(address recipient, uint256 amount)
+- the transfer() function calls the _transfer(_msgSender(), recipient, amount)
+
+- Let's look at the _transfer() function
+- The _transfer() function performs the necessary validation checks
+- It gets the contract balance of the token using balanceOf(address(this))
+- It checks if the token balance of the contract is >= the maxTxAmount (Maximum Transaction Amount)
+- If the condition passes, then it sets the contract balance of the token to the maxTxAmount (Maximum Transaction Amount)
+- It uses this check to provide liquidity to the token
+- Liquidity is provided by divide the contractBalance into 2, converts one of the half to ether (ETH) and then use the eth that was converted and the remaining half in token to provide liquidity in Token/Eth pair
+So in our case it will be HexaFinityToken/Eth pair. 
+
+- After the swapAndLiquify, the logic then proceeds to the _tokenTransfer function.
+
+- The _tokenTransfer function takes in 3 parameters, the from address, the to address and the amount to be transferred.
+- In our case the amount = 100000000000
+- The burn amount is calculated in the _tokenTransfer function
+
+- burnAmt = amount * _burnFee / RATE_DENOMINATOR
+
+- amount = 100000000000
+- _burnFee = 3
+- RATE_DENOMINATOR = 1000
+
+- _burnAmt = (100000000000 * 3) / 1000
+- _burnAmt = 300000000
+
+- taxFeeAmt = amount * _taxFee / RATE_DENOMINATOR
+
+- amount = 100000000000
+- _taxFee = 6
+- RATE_DENOMINATOR = 1000
+
+- taxFeeAmt = (100000000000 * 6) / 1000
+- taxFeeAmt = 600000000
+
+Now that we have the burnAmt and taxFeeAmt, let's proceed to the actual transfer and reflection operation
+
+- remember that owner is not excluded from rewards, neither is the recipient excluded from reward.
+- therefore the if statements check in the _tokenTransfer function will take us to the else block
+- inside the else block, the _transferStandard() is called.
+- the _transferStandard() takes in 3 parameters
+- 1 sender
+- 2 recipient
+- 3 tAmount  = amount - (burnAmt + taxFeeAmt)
+- tAmount = 100000000000 - (300000000 + 600000000)
+- tAmount = 100000000000 - 900000000
+
+- tAmount = 99100000000 //////
+
+Looking at the _transferStandard() function
+- inside the _transferStandard() function, the _getValues(tAmount) is called
+- the _getValues(tAmount) function returns:
+- 1 rAmount (reflection amount)
+- 2 rTransferAmount (reflection amount to transfer)
+- 3 rFee (reflection fee)
+- 4 tTransferAmount (actual transaction amount to transfer)
+- 5 tFee (tax fee)
+- 6 tLiquidity
+
+Remember at this point, tAmount = 99100000000
+- the _getValues(tAmount) is called
+- inside the _getValues(tAmount), the _getTValues(tAmount) is also called (This return the tTransferAmount, tFee, tLiquidity)
+- the tTransferAmount = tAmount - (tFee + tLiquidity)
+- tFee = tAmount * _rewardFee / RATE_DENOMINATOR
+- _rewardFee = 1
+- tFee = (99100000000 * 1) / 1000
+- tFee = 99100000
+
+- tLiquidity = tAmount * _liquidityFee / RATE_DENOMINATOR
+- tLiquidity = (99100000000 * 0) / 1000
+- tLiquidity = 0
+
+- tTransferAmount = tAmount - (tFee + tLiquidity)
+- tTransferAmount = 99100000000 - (99100000 + 0)
+- tTransferAmount = 99000900000
+
+After the above values are gotten from the _getTValues(tAmount) ///////////
+
+- Then it's now time to get the reflection values by calling _getRValues(tAmount, tFee, tLiquidity, _getRate())
+- the _getRate() function returns the current rate which is the division of the rSupply/tSupply
+
+- _getRate will return value = 19298681539552699237261830834781317975544997444
+- currentRate = 19298681539552699237261830834781317975544997444
+
+
+- we want to get the reflection amount(rAmount) using the transaction amount(tAmount)
+- tAmount is still  = 99100000000
+
+- rAmount = tAmount * currentRate
+- rAmount = 99100000000 * 19298681539552699237261830834781317975544997444
+- rAmount = 1912499340569672494412647435726828611376509246700400000000
+
+- rFee = tFee * currentRate
+- rFee = 99100000 * 19298681539552699237261830834781317975544997444
+- rFee = 1912499340569672494412647435726828611376509246700400000
+
+- rLiquidity = tLiquidity * currentRate
+- rLiquidity = 0 * 19298681539552699237261830834781317975544997444
+- rLiquidity = 0
+
+
+- rTransferAmount = rAmount - (rFee + rLiquidity)
+- rTransferAmount = 1912499340569672494412647435726828611376509246700400000000 - (1912499340569672494412647435726828611376509246700400000 + 0)
+
+- rTransferAmount = 1910586841229102821918234788291101782765132737453699600000
+
+- After the values are all gotten
+- then let's proceed back to the transfer deduction in the _transferStandard() function
+
+- _rOwned[sender] = _rOwned[sender] - rAmount
+- _rOwned[owner] = _rOwned[owner] - rAmount
+- _rOwned[amount] = 115792089237316195423570985008687907853269984664000000000000000000000000000000 - 1912499340569672494412647435726828611376509246700400000000
+
+- _rOwned[owner] = 115792089237316195421658485668118235358857337228273171388623490753299600000000
+
+- _rOwned[recipient] = _rOwned[recipient] + rTransferAmount
+- Assuming recipient has zero balance:
+- _rOwned[recipient] = 0 + 1910586841229102821918234788291101782765132737453699600000
+
+- _rOwned[recipient] = 1910586841229102821918234788291101782765132737453699600000
+
+- Let's now see how the reflection happens
+- The _takeLiquidity(tLiquidity) is called
+- The _reflectFee(rFee, tFee) is also called
+
+- Looking at the _takeLiquidity(tLiquidity) function ////
+- The _takeLiquidity() function will get the current rate
+
+- currentRate = 19298681539552699237261830834781317975544997444
+
+- it will use the tLiquidity and the current rate to get the rLiquidity
+- rLiquidity = tLiquidity * currentRate
+- rLiquidity = 0 * 19298681539552699237261830834781317975544997444
+- rLiquidity = 0
+
+- Then add the rLiquidity to the reflection balance of the contract
+
+- _rOwned[addres(this)] = _rOwned[addres(this)] + rLiquidity
+- Asumming address(this) has zero balance at first
+
+- _rOwned[addres(this)] = 0 + 0
+- _rOwned[addres(this)] = 0
+
+/// But if addres(this) is excluded ///
+
+- _tOwned[addres(this)] = _tOwned[addres(this)] + tLiquidity
+- _tOwned[addres(this)] = 0 + 0
+- _tOwned[addres(this)] = 0
+
+- Now looking at reflectFee(rFee, tFee) function
+- The reflectFee function subtracts the rFee from the _rTotal
+- and also increments the _tFeeTotal by adding the tFee
+- Remeber that the currentRate is gotten by dividing the rSupply(rTotal) by tSupply(tTotal)
+- And the balance of an address is gotten by diving the rAmount of the address by the currentRate
+- This means if the rTotal is reduced, the rSupply will be reduce too
+- If the rSupply is reduced, then currentRate is also reduced too because the tSupply is fixed.
+- Hence the reduction in rSupply means balance of an address will be increased.
+
+- In the _reflectFee(rFee, tFee) function, we have:
+- _rTotal = rTotal - rFee
+- _rTotal = 115792089237316195423570985008687907853269984664000000000000000000000000000000 - 1912499340569672494412647435726828611376509246700400000
+
+- _rTotal = 115792089237316195423569072509347338180775572016564273171388623490753299600000
+
+- _tFeeTotal = tFeeTotal + tFee
+- _tFeeTotal = 0 + 99100000
+- _tFeeTotal = 99100000
+
+This is the flow of HexaFinityToken reflection
