@@ -4,13 +4,11 @@ pragma solidity 0.8.17;
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
-
-import "./interfaces/IERC20.sol";
-import "./libraries/Context.sol";
-import "./libraries/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HexaFinityToken is Context, IERC20, Ownable {
-  // using Address for address;
 
   struct FeeValues {
     uint256 rAmount;
@@ -30,6 +28,10 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     uint256 tTax;
     uint256 tBurn;
   }
+
+  IUniswapV2Router02 public immutable uniswapV2Router;
+  address public immutable uniswapV2Pair;
+
   mapping(address => uint256) private _rOwned;
   mapping(address => uint256) private _tOwned;
   mapping(address => mapping(address => uint256)) private _allowances;
@@ -37,6 +39,7 @@ contract HexaFinityToken is Context, IERC20, Ownable {
   mapping(address => bool) private _isExcludedFromFee;
 
   mapping(address => bool) private _isExcluded;
+
   address[] private _excluded;
 
   uint256 private constant MAX = ~uint256(0);
@@ -62,9 +65,6 @@ contract HexaFinityToken is Context, IERC20, Ownable {
 
   address public _taxReceiverAddress;
   address public _burnAddress = 0x000000000000000000000000000000000000dEaD;
-
-  IUniswapV2Router02 public immutable uniswapV2Router;
-  address public immutable uniswapV2Pair;
 
   bool inSwapAndLiquify;
   bool public swapAndLiquifyEnabled = true;
@@ -256,8 +256,8 @@ contract HexaFinityToken is Context, IERC20, Ownable {
     _burnFee = burnFee;
   }
 
-  function setOwnerFeePercent(uint256 ownerFee) external onlyOwner {
-    _taxFee = ownerFee;
+  function setTaxFeePercent(uint256 taxFee) external onlyOwner {
+    _taxFee = taxFee;
   }
 
   function setTaxReceiverAddress(address _taxReceiver) external onlyOwner {
