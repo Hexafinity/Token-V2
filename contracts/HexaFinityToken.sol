@@ -40,7 +40,7 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
    */
   string private constant _name = "HexaFinity";
   string private constant _symbol = "HEXA";
-  uint8 private constant _decimals = 9;
+  uint8 private constant _decimals = 18;
 
   /**
    * @dev denomiator of rate calculation.
