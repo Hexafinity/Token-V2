@@ -13,6 +13,11 @@ _rTotal = 1157920892373161954235709850086879078532699846656405640394575840079131
 
 _rTotal = 115792089237316195423570985008687907853269984665640564000000000000000000000000
 
+In the contract constructor:
+- owners reflection balance is set to the total reflection (_rTotal)
+
+- _rOwned[owner] = _rTotal
+
 _rOwned[owner] = 115792089237316195423570985008687907853269984665640564000000000000000000000000
 
 Let's get the balanceOf(owner) given the reflection balance of the owner
@@ -81,7 +86,7 @@ So in our case it will be Safemoon/Eth pair.
 
 - After the swapAndLiquify, the logic then proceeds to the _tokenTransfer function.
 
-- The _tokenTransfer function takes in 3 parameters: the from address, the to address and the takeFee status which will be true by default by will be set to false if the from address or the to address is excluded from fee. 
+- The _tokenTransfer function takes in 4 parameters: the from address, the to address, the amount and the takeFee status which will be true by default by will be set to false if the from address or the to address is excluded from fee. 
 
 - owner is transferring 100000000000 token
 - owner is not excluded from receiving rewards which means _isExcluded[sender] will be false
@@ -94,8 +99,8 @@ So in our case it will be Safemoon/Eth pair.
 - 2 rTransferAmount (reflection amount to transfer)
 - 3 rFee (reflection fee)
 - 4 tTransferAmount (actual transaction amount to transfer)
-- 5 tFee(tax fee)
-- 6 tLiquidity ()
+- 5 tFee (tax fee)
+- 6 tLiquidity
 
 Remember our tAmount = 100000000000
 - the _getValues(tAmount) is called
@@ -162,7 +167,7 @@ Remember our tAmount = 100000000000
 - rLiquidity = 5000000000 * 115792089237316195423570985008687907853269984665640564
 - rLiquidity = 578960446186580977117854925043439539266349923328202820000000000
 
-- Then add the rLiquidity to the ref balance of the contract
+- Then add the rLiquidity to the reflection balance of the contract
 - _rOwned[addres(this)] = _rOwned[addres(this)] + rLiquidity
 - Asumming address(this) has zero balance at first
 - _rOwned[addres(this)] = 0 + 578960446186580977117854925043439539266349923328202820000000000
@@ -185,6 +190,30 @@ Remember our tAmount = 100000000000
 
 - In the _reflectFee(rFee, tFee) function, we have:
 - _rTotal = rTotal - rFee
+- _rTotal = 115792089237316195423570985008687907853269984665640564000000000000000000000000 - 578960446186580977117854925043439539266349923328202820000000000
+
+- _rTotal = 115792089237315616463124798427710789998344941226101297650076671797180000000000
+
 - _tFeeTotal = tFeeTotal + tFee
+- _tFeeTotal = 0 + 5000000000
+- _tFeeTotal = 5000000000
 
 This is the flow of safemoon reflection
+
+
+////////////////
+Let's now check the balanceOf the recipient using the new _rTotal value
+
+- currentRate = rSupply / tSupply
+
+- tSupply = _tTotal
+- tSupply = 1000000000000000000000000
+
+- rSupply = _rTotal
+- rSupply = 115792089237315616463124798427710789998344941226101297650076671797180000000000
+
+- currentRate = 115792089237315616463124798427710789998344941226101297650076671797180000000000 / 1000000000000000000000000 
+
+- balanceOf(address) = _rOwned[address] / currentRate
+- balanceOf(recipient) = _rOwned[recipient] / currentRate
+- balanceOf(recipient) = 10421288031358457588121388650781911706794298619907650760000000000 / 
