@@ -22,6 +22,16 @@ async function main() {
   await hfToken.deployed();
 
   console.log("HexaFinityToken deployed to:", hfToken.address);
+
+  try {
+    await run('verify:verify', {
+      address: hfToken.address,
+      constructorArguments: [routerAddress, taxReceiverAddress],
+    });
+    console.log('HexaFinityToken verify success');
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 main()
