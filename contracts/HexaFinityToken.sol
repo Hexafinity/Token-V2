@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.17;
 
 import "./interfaces/IPancakeFactory.sol";
 import "./interfaces/IPancakeRouter02.sol";
@@ -8,15 +8,11 @@ import "./interfaces/IPancakePair.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 
 /**
  * @dev Implementation of the {IBEP20} interface.
  */
 contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
-    using Address for address;
 
     mapping(address => uint256) private _rOwned;
     mapping(address => uint256) private _tOwned;
@@ -27,7 +23,7 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     mapping(address => bool) private _isExcluded;
     address[] private _excluded;
    
-    uint256 private constant MAX = ~uint256(0);
+    uint256 private constant MAX = type(uint256).max;
     uint256 private constant _tTotal = 6000 * 10**9 * 10**_decimals;
     uint256 private _rTotal = (MAX - (MAX % _tTotal));
     uint256 private _tFeeTotal;
@@ -124,9 +120,9 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
         _isExcludedFromFee[_taxFeeAddress] = true;
 
         //exclude tax receiver and burn address from reward
-        excludeFromReward(taxFeeAddress);
-        excludeFromReward(BURN_ADDRESS);
-        excludeFromReward(pancakeswapV2Pair);
+        _isExcluded[taxFeeAddress] = true;
+        _isExcluded[BURN_ADDRESS] = true;
+        _isExcluded[pancakeswapV2Pair] = true;
 
         emit Transfer(address(0), _msgSender(), _tTotal);
     }
@@ -171,19 +167,19 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
 
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _transfer(sender, recipient, amount);
-        _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
+        _approve(sender, _msgSender(), _allowances[sender][_msgSender()] - amount);
         return true;
     }
 
     function increaseAllowance(address spender, uint256 addedValue) external virtual returns (bool)
     {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool)
     {
-        _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "BEP20: decreased allowance below zero"));
+        _approve(_msgSender(), spender, _allowances[_msgSender()][spender] - subtractedValue);
         return true;
     }
 
@@ -214,7 +210,7 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     {
         require(rAmount <= _rTotal, "Amount must be less than total reflections");
         uint256 currentRate = _getRate();
-        return rAmount.div(currentRate);
+        return rAmount / currentRate;
     }
 
     function excludeFromReward(address account) public onlyOwner() {
@@ -251,10 +247,10 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
         uint256 tFee, 
         uint256 tLiquidity
         ) = _getValues(tAmount);
-        _tOwned[sender] = _tOwned[sender].sub(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);        
+        _tOwned[sender] = _tOwned[sender] - tAmount;
+        _rOwned[sender] = _rOwned[sender] - rAmount;
+        _tOwned[recipient] = _tOwned[recipient] + tTransferAmount;
+        _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
@@ -264,8 +260,8 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     receive() external payable {}
 
     function _reflectFee(uint256 rFee, uint256 tFee) private {
-        _rTotal = _rTotal.sub(rFee);
-        _tFeeTotal = _tFeeTotal.add(tFee);
+        _rTotal = _rTotal - rFee;
+        _tFeeTotal = _tFeeTotal + tFee;
     }
 
     function _getValues(uint256 tAmount) private view returns (uint256, uint256, uint256, uint256, uint256, uint256)
@@ -279,22 +275,22 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     {
         uint256 tFee = calculateTaxFee(tAmount);
         uint256 tLiquidity = calculateLiquidityFee(tAmount);
-        uint256 tTransferAmount = tAmount.sub(tFee).sub(tLiquidity);
+        uint256 tTransferAmount = tAmount - tFee - tLiquidity;
         return (tTransferAmount, tFee, tLiquidity);
     }
 
     function _getRValues(uint256 tAmount, uint256 tFee, uint256 tLiquidity, uint256 currentRate) private pure returns (uint256, uint256, uint256)
     {
-        uint256 rAmount = tAmount.mul(currentRate);
-        uint256 rFee = tFee.mul(currentRate);
-        uint256 rLiquidity = tLiquidity.mul(currentRate);
-        uint256 rTransferAmount = rAmount.sub(rFee).sub(rLiquidity);
+        uint256 rAmount = tAmount * currentRate;
+        uint256 rFee = tFee * currentRate;
+        uint256 rLiquidity = tLiquidity * currentRate;
+        uint256 rTransferAmount = rAmount - rFee - rLiquidity;
         return (rAmount, rTransferAmount, rFee);
     }
 
     function _getRate() private view returns(uint256) {
         (uint256 rSupply, uint256 tSupply) = _getCurrentSupply();
-        return rSupply.div(tSupply);
+        return rSupply / tSupply;
     }
 
     /**
@@ -309,27 +305,27 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
                 _rOwned[_excluded[i]] > rSupply ||
                 _tOwned[_excluded[i]] > tSupply
             ) return (_rTotal, _tTotal);
-            rSupply = rSupply.sub(_rOwned[_excluded[i]]);
-            tSupply = tSupply.sub(_tOwned[_excluded[i]]);
+            rSupply = rSupply - _rOwned[_excluded[i]];
+            tSupply = tSupply - _tOwned[_excluded[i]];
         }
-        if (rSupply < _rTotal.div(_tTotal)) return (_rTotal, _tTotal);
+        if (rSupply < _rTotal / _tTotal) return (_rTotal, _tTotal);
         return (rSupply, tSupply);
     }
     
     function _takeLiquidity(uint256 tLiquidity) private {
         uint256 currentRate = _getRate();
-        uint256 rLiquidity = tLiquidity.mul(currentRate);
-        _rOwned[address(this)] = _rOwned[address(this)].add(rLiquidity);
+        uint256 rLiquidity = tLiquidity * currentRate;
+        _rOwned[address(this)] = _rOwned[address(this)] + rLiquidity;
         if(_isExcluded[address(this)])
-            _tOwned[address(this)] = _tOwned[address(this)].add(tLiquidity);
+            _tOwned[address(this)] = _tOwned[address(this)] + tLiquidity;
     }
     
     function calculateTaxFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_rewardFee).div(RATE_DENOMINATOR);
+        return _amount * _rewardFee / RATE_DENOMINATOR;
     }
 
     function calculateLiquidityFee(uint256 _amount) private view returns (uint256) {
-        return _amount.mul(_liquidityFee).div(RATE_DENOMINATOR);
+        return _amount * _liquidityFee / RATE_DENOMINATOR;
     }
     
     function removeAllFee() private {
@@ -397,8 +393,8 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
 
     function swapAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
         // split the contract balance into halves
-        uint256 half = contractTokenBalance.div(2);
-        uint256 otherHalf = contractTokenBalance.sub(half);
+        uint256 half = contractTokenBalance / 2;
+        uint256 otherHalf = contractTokenBalance - half;
 
         // capture the contract's current BNB balance.
         // this is so that we can capture exactly the amount of BNB that the
@@ -410,7 +406,7 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
         swapTokensForBnb(half); // this breaks the BNB 
 
         // how much BNB did we just swap into?
-        uint256 newBalance = address(this).balance.sub(initialBalance);
+        uint256 newBalance = address(this).balance - initialBalance;
 
         // add liquidity to Pancakeswap
         addLiquidity(otherHalf, newBalance);
@@ -472,17 +468,17 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
         }
         
         //Calculate burn amount and development amount
-        uint256 burnAmt = amount.mul(_burnFee).div(RATE_DENOMINATOR);
-        uint256 taxFeeAmt = amount.mul(_taxFee).div(RATE_DENOMINATOR);
+        uint256 burnAmt = amount * _burnFee / RATE_DENOMINATOR;
+        uint256 taxFeeAmt = amount * _taxFee / RATE_DENOMINATOR;
 
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
-            _transferFromExcluded(sender, recipient, (amount.sub(burnAmt).sub(taxFeeAmt)));
+            _transferFromExcluded(sender, recipient, amount - burnAmt - taxFeeAmt);
         } else if (!_isExcluded[sender] && _isExcluded[recipient]) {
-            _transferToExcluded(sender, recipient, (amount.sub(burnAmt).sub(taxFeeAmt)));
+            _transferToExcluded(sender, recipient, amount - burnAmt - taxFeeAmt);
         } else if (_isExcluded[sender] && _isExcluded[recipient]) {
-            _transferBothExcluded(sender, recipient, (amount.sub(burnAmt).sub(taxFeeAmt)));
+            _transferBothExcluded(sender, recipient, amount - burnAmt - taxFeeAmt);
         } else {
-            _transferStandard(sender, recipient, (amount.sub(burnAmt).sub(taxFeeAmt)));
+            _transferStandard(sender, recipient, amount - burnAmt - taxFeeAmt);
         }
         
         //Temporarily remove fees to transfer to burn address and development wallet
@@ -516,8 +512,8 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
             uint256 tFee,
             uint256 tLiquidity
         ) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);
+        _rOwned[sender] = _rOwned[sender] - rAmount;
+        _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
@@ -532,9 +528,9 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
             uint256 tFee, 
             uint256 tLiquidity
         ) = _getValues(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _tOwned[recipient] = _tOwned[recipient].add(tTransferAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);           
+        _rOwned[sender] = _rOwned[sender] - rAmount;
+        _tOwned[recipient] = _tOwned[recipient] + tTransferAmount;
+        _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;           
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);
@@ -549,9 +545,9 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
             uint256 tFee, 
             uint256 tLiquidity
         ) = _getValues(tAmount);
-        _tOwned[sender] = _tOwned[sender].sub(tAmount);
-        _rOwned[sender] = _rOwned[sender].sub(rAmount);
-        _rOwned[recipient] = _rOwned[recipient].add(rTransferAmount);   
+        _tOwned[sender] = _tOwned[sender] - tAmount;
+        _rOwned[sender] = _rOwned[sender] - rAmount;
+        _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;
         _takeLiquidity(tLiquidity);
         _reflectFee(rFee, tFee);
         emit Transfer(sender, recipient, tTransferAmount);

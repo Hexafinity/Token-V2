@@ -43,4 +43,19 @@ describe("Integration tests for original token", () => {
         const WETH = await PancakeSwap.WETH();
         await PancakeSwap.swapETHForExactTokens(10**15, [WETH, token.address], user0.address, constants.MaxUint256, {"value": expandTo18Decimals(1)})
     });
+    
+    it('tradingOnPancakeSwap', async () => {
+        const ABI = UniswapV2Router02.abi;
+        const PancakeSwap = await hre.ethers.getContractAt(ABI, ROUTER, admin);
+        await token.approve(PancakeSwap.address, TEST_AMOUNT);
+        await PancakeSwap.addLiquidityETH(token.address, TEST_AMOUNT, 0, 0, admin.address, constants.MaxUint256, {"value": expandTo18Decimals(1)});
+        const WETH = await PancakeSwap.WETH();
+        await PancakeSwap.connect(user0).swapETHForExactTokens(10**15, [WETH, token.address], user0.address, constants.MaxUint256, {"value": expandTo18Decimals(1)})
+        await PancakeSwap.connect(user1).swapExactETHForTokens(10**15, [WETH, token.address], user1.address, constants.MaxUint256, {"value": expandTo18Decimals(1)})
+        let balance0 = await token.balanceOf(user0.address);
+        let balance1 = await token.balanceOf(user1.address);
+        await token.connect(user0).approve(PancakeSwap.address, balance0);
+        await token.connect(user1).approve(PancakeSwap.address, balance1);
+        await PancakeSwap.connect(user0).swapExactTokensForETHSupportingFeeOnTransferTokens(balance0, 0, [token.address, WETH], user0.address, constants.MaxUint256)
+    });
 });
