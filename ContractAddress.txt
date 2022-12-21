@@ -1,0 +1,1 @@
+HexaFinityToken = 0xcE7c7c8e6Bf97c21A0b078F756A469eF5f9AA665

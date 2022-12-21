@@ -46,35 +46,47 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     /**
      * @dev Percentage of the static reflection fee.
      */        
-    uint256 public _rewardFee = 2;
-    uint256 private _previousRewardFee = _rewardFee;
+    uint16 private constant DEFAULT_REWARD_FEE = 2;
+    uint16 private constant DEFAULT_LIQUIDITY_FEE = 6;
+    uint16 private constant DEFAULT_BURN_FEE = 2;
+    uint16 private constant DEFAULT_TAX_FEE = 6;
+    /**
+     * @dev Percentage of the static reflection fee.
+     */        
+    uint16 public _rewardFee = DEFAULT_REWARD_FEE;
+    uint16 private _previousRewardFee = DEFAULT_REWARD_FEE;
+
 
     /**
      * @dev Percentage of the liquidity fee.
      */           
-    uint256 public _liquidityFee = 6;
-    uint256 private _previousLiquidityFee = _liquidityFee;
+
+    uint16 public _liquidityFee = DEFAULT_LIQUIDITY_FEE;
+    uint16 private _previousLiquidityFee = DEFAULT_LIQUIDITY_FEE;
+
+    bool inSwapAndLiquify;
+    bool public swapAndLiquifyEnabled = false;
 
     /**
      * @dev Percentage of the auto burn fee.
      */   
-    uint256 public _burnFee = 2;
-    uint256 private _previousBurnFee = _burnFee;
+    uint16 public _burnFee = DEFAULT_BURN_FEE;
+    uint16 private _previousBurnFee = DEFAULT_BURN_FEE;
     address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD; 
 
     /**
      * @dev Percentage of the owner fee.
      */   
-    uint256 public _taxFee = 6;
-    uint256 private _previousTaxFee = _taxFee;
+    uint16 public _taxFee = DEFAULT_TAX_FEE;
+    uint16 private _previousTaxFee = DEFAULT_TAX_FEE;
     address public taxFeeAddress;
 
     IPancakeRouter02 public pancakeswapV2Router;
     address public pancakeswapV2Pair;
-    
-    bool inSwapAndLiquify;
-    bool public swapAndLiquifyEnabled = false;
 
+    IPancakeRouter02 public pancakeswapV2Router;
+    address public pancakeswapV2Pair;
+    
     /**
      * @dev The maximum transaction amount to minimize and break the impact of 
      * Whale actions.
@@ -577,21 +589,22 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
       
     function includeInFee(address account) external onlyOwner {
         _isExcludedFromFee[account] = false;
-    }
+    } 
 
-    function setRewardFeePercent(uint256 rewardFee) external onlyOwner() {
+
+    function setRewardFeePercent(uint16 rewardFee) external onlyOwner() {
         _rewardFee = rewardFee;
     }
-    
-    function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner() {
+
+    function setLiquidityFeePercent(uint16 liquidityFee) external onlyOwner() {
         _liquidityFee = liquidityFee;
     }
    
-    function setBurnFeePercent(uint256 burnFee) external onlyOwner() {
+    function setBurnFeePercent(uint16 burnFee) external onlyOwner() {
         _burnFee = burnFee;
     } 
 
-    function setTaxFeePercent(uint256 taxFee) external onlyOwner() {
+    function setTaxFeePercent(uint16 taxFee) external onlyOwner() {
         _taxFee = taxFee;
     }
 

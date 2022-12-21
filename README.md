@@ -4,9 +4,11 @@ Name: HexaFinity
 Symbol: HEXA
 Total supply: 6 trillion
 Decimal: 18
-Burn rate: 1%
-Tax rate: 0.3%
-Holder rewards: 1%
+
+Burn rate:	0.2%
+Tax Rate:	0.6%
+Holder rewards:	0.2%
+Liquidity pool:	0.6%
 
 ## Deploy HexaFinity Token to network and verify
 
