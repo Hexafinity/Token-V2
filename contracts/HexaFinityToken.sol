@@ -43,6 +43,9 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
      */   
     uint256 private constant RATE_DENOMINATOR = 10**3;
 
+    /**
+     * @dev Percentage of the static reflection fee.
+     */        
     uint16 private constant DEFAULT_REWARD_FEE = 2;
     uint16 private constant DEFAULT_LIQUIDITY_FEE = 6;
     uint16 private constant DEFAULT_BURN_FEE = 2;
@@ -53,9 +56,11 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     uint16 public _rewardFee = DEFAULT_REWARD_FEE;
     uint16 private _previousRewardFee = DEFAULT_REWARD_FEE;
 
+
     /**
      * @dev Percentage of the liquidity fee.
      */           
+
     uint16 public _liquidityFee = DEFAULT_LIQUIDITY_FEE;
     uint16 private _previousLiquidityFee = DEFAULT_LIQUIDITY_FEE;
 
@@ -75,6 +80,9 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     uint16 public _taxFee = DEFAULT_TAX_FEE;
     uint16 private _previousTaxFee = DEFAULT_TAX_FEE;
     address public taxFeeAddress;
+
+    IPancakeRouter02 public pancakeswapV2Router;
+    address public pancakeswapV2Pair;
 
     IPancakeRouter02 public pancakeswapV2Router;
     address public pancakeswapV2Pair;
@@ -581,12 +589,13 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
       
     function includeInFee(address account) external onlyOwner {
         _isExcludedFromFee[account] = false;
-    }
+    } 
+
 
     function setRewardFeePercent(uint16 rewardFee) external onlyOwner() {
         _rewardFee = rewardFee;
     }
-    
+
     function setLiquidityFeePercent(uint16 liquidityFee) external onlyOwner() {
         _liquidityFee = liquidityFee;
     }
