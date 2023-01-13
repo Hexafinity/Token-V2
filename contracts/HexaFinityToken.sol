@@ -13,34 +13,11 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * @dev Implementation of the {IBEP20} interface.
  */
 contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
-  mapping(address => uint256) private _rOwned;
-  mapping(address => uint256) private _tOwned;
-  mapping(address => mapping(address => uint256)) private _allowances;
 
-  mapping(address => bool) private _isExcludedFromFee;
+  bool inSwapAndLiquify;
+  bool public swapAndLiquifyEnabled = false;
 
-  mapping(address => bool) private _isExcluded;
-  address[] private _excluded;
-
-  uint256 private constant MAX = type(uint256).max;
-  uint256 private constant _tTotal = 6000 * 10**9 * 10**_decimals;
-  uint256 private _rTotal = (MAX - (MAX % _tTotal));
-  uint256 private _tFeeTotal;
-
-  /**
-   * @dev Sets the values for {NAME} and {SYMBOL}, and {DECIMALS}
-   *
-   * All three of these values are constants: they can only be set once during
-   * construction.
-   */
-  string private constant _name = "HexaFinity";
-  string private constant _symbol = "HEXA";
   uint8 private constant _decimals = 18;
-
-  /**
-   * @dev denomiator of rate calculation.
-   */
-  uint256 private constant RATE_DENOMINATOR = 10**3;
 
   /**
    * @dev Percentage of the static reflection fee.
@@ -62,25 +39,45 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
   uint16 public _liquidityFee = DEFAULT_LIQUIDITY_FEE;
   uint16 private _previousLiquidityFee = DEFAULT_LIQUIDITY_FEE;
 
-  bool inSwapAndLiquify;
-  bool public swapAndLiquifyEnabled = false;
-
   /**
    * @dev Percentage of the auto burn fee.
    */
   uint16 public _burnFee = DEFAULT_BURN_FEE;
   uint16 private _previousBurnFee = DEFAULT_BURN_FEE;
-  address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
   /**
    * @dev Percentage of the owner fee.
    */
   uint16 public _taxFee = DEFAULT_TAX_FEE;
   uint16 private _previousTaxFee = DEFAULT_TAX_FEE;
+
+  /**
+   * @dev Sets the values for {NAME} and {SYMBOL}, and {DECIMALS}
+   *
+   * All three of these values are constants: they can only be set once during
+   * construction.
+   */
+
+  string private constant _name = "HexaFinity";
+  string private constant _symbol = "HEXA";
+
+  address[] private _excluded;
+
+  address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+
   address public taxFeeAddress;
 
   IPancakeRouter02 public pancakeswapV2Router;
   address public pancakeswapV2Pair;
+
+  uint256 private constant MAX = type(uint256).max;
+  uint256 private constant _tTotal = 6000 * 10**9 * 10**_decimals;
+  uint256 private _rTotal = (MAX - (MAX % _tTotal));
+  uint256 private _tFeeTotal;
+  /**
+   * @dev denomiator of rate calculation.
+   */
+  uint256 private constant RATE_DENOMINATOR = 10**3;
 
   /**
    * @dev The maximum transaction amount to minimize and break the impact of
@@ -92,6 +89,14 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
    * @dev The number of tokens sell, to add to the liquidity.
    */
   uint256 public numTokensSellToAddToLiquidity = 3 * 10**9 * 10**_decimals;
+
+  mapping(address => uint256) private _rOwned;
+  mapping(address => uint256) private _tOwned;
+  mapping(address => mapping(address => uint256)) private _allowances;
+
+  mapping(address => bool) private _isExcludedFromFee;
+
+  mapping(address => bool) private _isExcluded;
 
   event SwapAndLiquifyEnabledUpdated(bool enabled);
   event LiquidityAdded(uint256 tokenAmount, uint256 bnbAmount);
@@ -173,6 +178,7 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     address recipient,
     uint256 amount
   ) external override returns (bool) {
+    require(_allowances[sender][_msgSender()] >= amount, "Not allowed amount");
     _transfer(sender, recipient, amount);
     _approve(sender, _msgSender(), _allowances[sender][_msgSender()] - amount);
     return true;
@@ -188,6 +194,7 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
     virtual
     returns (bool)
   {
+    require(_allowances[_msgSender()][spender] >= subtractedValue, "Not allowed amount");
     _approve(_msgSender(), spender, _allowances[_msgSender()][spender] - subtractedValue);
     return true;
   }
@@ -240,7 +247,8 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
    */
   function includeInReward(address account) external onlyOwner {
     require(_isExcluded[account], "Account is not excluded");
-    for (uint256 i = 0; i < _excluded.length; i++) {
+    uint256 length = _excluded.length;
+    for (uint256 i = 0; i < length; i++) {
       if (_excluded[i] == account) {
         _excluded[i] = _excluded[_excluded.length - 1];
         _tOwned[account] = 0;
@@ -264,6 +272,8 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
       uint256 tFee,
       uint256 tLiquidity
     ) = _getValues(tAmount);
+    require(_tOwned[sender] >= tAmount, "Not enough Balance");
+    require(_rOwned[sender] >= rAmount, "Not enough Balance");
     _tOwned[sender] = _tOwned[sender] - tAmount;
     _rOwned[sender] = _rOwned[sender] - rAmount;
     _tOwned[recipient] = _tOwned[recipient] + tTransferAmount;
@@ -351,7 +361,8 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
   function _getCurrentSupply() private view returns (uint256, uint256) {
     uint256 rSupply = _rTotal;
     uint256 tSupply = _tTotal;
-    for (uint256 i = 0; i < _excluded.length; i++) {
+    uint256 length = _excluded.length;
+    for (uint256 i = 0; i < length; i++) {
       if (_rOwned[_excluded[i]] > rSupply || _tOwned[_excluded[i]] > tSupply)
         return (_rTotal, _tTotal);
       rSupply = rSupply - _rOwned[_excluded[i]];
@@ -561,6 +572,7 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
       uint256 tFee,
       uint256 tLiquidity
     ) = _getValues(tAmount);
+    require(_rOwned[sender] >= rAmount, "Not Enough Balance");
     _rOwned[sender] = _rOwned[sender] - rAmount;
     _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;
     _takeLiquidity(tLiquidity);
@@ -581,6 +593,7 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
       uint256 tFee,
       uint256 tLiquidity
     ) = _getValues(tAmount);
+    require(_rOwned[sender] >= rAmount, "Not Enough Balance");
     _rOwned[sender] = _rOwned[sender] - rAmount;
     _tOwned[recipient] = _tOwned[recipient] + tTransferAmount;
     _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;
@@ -602,6 +615,8 @@ contract HexaFinityToken is IERC20, Ownable, ReentrancyGuard {
       uint256 tFee,
       uint256 tLiquidity
     ) = _getValues(tAmount);
+    require(_tOwned[sender] >= tAmount, "Not Enough Balance");
+    require(_rOwned[sender] >= rAmount, "Not Enough Balance");
     _tOwned[sender] = _tOwned[sender] - tAmount;
     _rOwned[sender] = _rOwned[sender] - rAmount;
     _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;

@@ -142,6 +142,54 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
   using SafeMathUpgradeable for uint256;
   using AddressUpgradeable for address;
 
+  
+  bool inSwapAndLiquify;
+  bool public swapAndLiquifyEnabled;
+
+  uint8 private _decimals;
+  string private _name;
+  string private _symbol;
+
+  address[] private _excluded;
+
+  address public _taxReceiverAddress;
+  address public _burnAddress;
+
+  IUniswapV2Router02 public uniswapV2Router;
+  address public uniswapV2Pair;
+
+  address private migration;
+  address private _initializerAccount;
+
+  uint256 private constant MAX = ~uint256(0);
+  uint256 private _tTotal;
+  uint256 private _rTotal;
+  uint256 private _tFeeTotal;
+
+
+  uint256 public _taxFee;
+  uint256 private _previousTaxFee;
+
+  uint256 public _burnFee;
+  uint256 private _previousBurnFee;
+
+  uint256 public _ownerFee;
+  uint256 private _previousOwnerFee;
+
+  uint256 public _liquidityFee;
+  uint256 private _previousLiquidityFee;
+
+  uint256 public _maxTxAmount;
+  uint256 private numTokensSellToAddToLiquidity;
+
+  mapping(address => uint256) private _rOwned;
+  mapping(address => uint256) private _tOwned;
+  mapping(address => mapping(address => uint256)) private _allowances;
+
+  mapping(address => bool) private _isExcludedFromFee;
+
+  mapping(address => bool) private _isExcluded;
+
   struct FeeValues {
     uint256 rAmount;
     uint256 rTransferAmount;
@@ -160,50 +208,6 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
     uint256 tOwner;
     uint256 tBurn;
   }
-  mapping(address => uint256) private _rOwned;
-  mapping(address => uint256) private _tOwned;
-  mapping(address => mapping(address => uint256)) private _allowances;
-
-  mapping(address => bool) private _isExcludedFromFee;
-
-  mapping(address => bool) private _isExcluded;
-  address[] private _excluded;
-
-  uint256 private constant MAX = ~uint256(0);
-  uint256 private _tTotal;
-  uint256 private _rTotal;
-  uint256 private _tFeeTotal;
-
-  string private _name;
-  string private _symbol;
-  uint8 private _decimals;
-
-  uint256 public _taxFee;
-  uint256 private _previousTaxFee;
-
-  uint256 public _burnFee;
-  uint256 private _previousBurnFee;
-
-  uint256 public _ownerFee;
-  uint256 private _previousOwnerFee;
-
-  uint256 public _liquidityFee;
-  uint256 private _previousLiquidityFee;
-
-  address public _taxReceiverAddress;
-  address public _burnAddress;
-
-  IUniswapV2Router02 public uniswapV2Router;
-  address public uniswapV2Pair;
-
-  address private migration;
-  address private _initializerAccount;
-
-  bool inSwapAndLiquify;
-  bool public swapAndLiquifyEnabled;
-
-  uint256 public _maxTxAmount;
-  uint256 private numTokensSellToAddToLiquidity;
 
   event MinTokensBeforeSwapUpdated(uint256 minTokensBeforeSwap);
   event SwapAndLiquifyEnabledUpdated(bool enabled);
@@ -317,6 +321,7 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
     address recipient,
     uint256 amount
   ) public override returns (bool) {
+    require(_allowances[sender][_msgSender()] >= amount, "Not allowed amount");
     _transfer(sender, recipient, amount);
     _approve(
       sender,
@@ -336,6 +341,7 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
     virtual
     returns (bool)
   {
+    require(_allowances[_msgSender()][spender] >= subtractedValue, "Not allowed amount");
     _approve(
       _msgSender(),
       spender,
@@ -396,7 +402,8 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
 
   function includeInReward(address account) external onlyOwner {
     require(_isExcluded[account], "Account is already excluded");
-    for (uint256 i = 0; i < _excluded.length; i++) {
+    uint256 length = _excluded.length;
+    for (uint256 i = 0; i < length; i++) {
       if (_excluded[i] == account) {
         _excluded[i] = _excluded[_excluded.length - 1];
         _tOwned[account] = 0;
@@ -413,6 +420,8 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
     uint256 tAmount
   ) private {
     FeeValues memory _values = _getValues(tAmount);
+    require(_tOwned[sender] >= tAmount, "Not enough Balance");
+    require(_rOwned[sender] >= _values.rAmount, "Not enough Balance");
     _tOwned[sender] = _tOwned[sender].sub(tAmount);
     _rOwned[sender] = _rOwned[sender].sub(_values.rAmount);
     _tOwned[recipient] = _tOwned[recipient].add(_values.tTransferAmount);
@@ -543,7 +552,8 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
   function _getCurrentSupply() private view returns (uint256, uint256) {
     uint256 rSupply = _rTotal;
     uint256 tSupply = _tTotal;
-    for (uint256 i = 0; i < _excluded.length; i++) {
+    uint256 length = _excluded.length;
+    for (uint256 i = 0; i < length; i++) {
       if (_rOwned[_excluded[i]] > rSupply || _tOwned[_excluded[i]] > tSupply)
         return (_rTotal, _tTotal);
       rSupply = rSupply.sub(_rOwned[_excluded[i]]);
@@ -735,6 +745,7 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
     uint256 tAmount
   ) private {
     FeeValues memory _values = _getValues(tAmount);
+    require(_rOwned[sender] >= _values.rAmount, "Not enough Balance");
     _rOwned[sender] = _rOwned[sender].sub(_values.rAmount);
     _rOwned[recipient] = _rOwned[recipient].add(_values.rTransferAmount);
     _takeFees(sender, _values);
@@ -748,6 +759,7 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
     uint256 tAmount
   ) private {
     FeeValues memory _values = _getValues(tAmount);
+    require(_rOwned[sender] >= _values.rAmount, "Not enough Balance");
     _rOwned[sender] = _rOwned[sender].sub(_values.rAmount);
     _tOwned[recipient] = _tOwned[recipient].add(_values.tTransferAmount);
     _rOwned[recipient] = _rOwned[recipient].add(_values.rTransferAmount);
@@ -762,6 +774,8 @@ contract HexaFinityTokenUpgradableOriginal is IHexaFinity, OwnableUpgradeable {
     uint256 tAmount
   ) private {
     FeeValues memory _values = _getValues(tAmount);
+    require(_tOwned[sender] >= tAmount, "Not enough Balance");
+    require(_rOwned[sender] >= _values.rAmount, "Not enough Balance");
     _tOwned[sender] = _tOwned[sender].sub(tAmount);
     _rOwned[sender] = _rOwned[sender].sub(_values.rAmount);
     _rOwned[recipient] = _rOwned[recipient].add(_values.rTransferAmount);

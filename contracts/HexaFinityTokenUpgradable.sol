@@ -12,30 +12,31 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
-  mapping(address => uint256) private _rOwned;
-  mapping(address => uint256) private _tOwned;
-  mapping(address => mapping(address => uint256)) private _allowances;
-
-  mapping(address => bool) private _isExcludedFromFee;
-
-  mapping(address => bool) private _isExcluded;
-  address[] private _excluded;
+  bool inSwapAndLiquify;
+  bool public swapAndLiquifyEnabled;
   
-  uint256 private constant MAX = type(uint256).max;
-  uint256 private _tTotal;
-  uint256 private _rTotal;
-  uint256 private _tFeeTotal;
-
   /**
    * @dev Sets the values for {NAME} and {SYMBOL}, and {DECIMALS}
    *
    * All three of these values are constants: they can only be set once during
    * construction.
    */
+  uint8 private _decimals;
   string private _name;
   string private _symbol;
-  uint8 private _decimals;
+
+  address[] private _excluded;
+  IPancakeRouter02 public pancakeswapV2Router;
+  address public pancakeswapV2Pair;
   
+  address public taxFeeAddress;
+  
+  address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD; 
+  
+  uint256 private constant MAX = type(uint256).max;
+  uint256 private _tTotal;
+  uint256 private _rTotal;
+  uint256 private _tFeeTotal;
   /**
    * @dev denomiator of rate calculation.
    */   
@@ -58,21 +59,12 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
    */   
   uint256 public _burnFee;
   uint256 private _previousBurnFee;
-  address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD; 
 
   /**
    * @dev Percentage of the owner fee.
    */   
   uint256 public _taxFee;
-  address public taxFeeAddress;
   uint256 private _previousTaxFee;
-
-  IPancakeRouter02 public pancakeswapV2Router;
-  address public pancakeswapV2Pair;
-  
-  bool inSwapAndLiquify;
-  bool public swapAndLiquifyEnabled;
-
   /**
    * @dev The maximum transaction amount to minimize and break the impact of 
    * Whale actions.
@@ -83,6 +75,14 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
    * @dev The number of tokens sell, to add to the liquidity.
    */     
   uint256 public numTokensSellToAddToLiquidity;
+
+  mapping(address => uint256) private _rOwned;
+  mapping(address => uint256) private _tOwned;
+  mapping(address => mapping(address => uint256)) private _allowances;
+
+  mapping(address => bool) private _isExcludedFromFee;
+
+  mapping(address => bool) private _isExcluded;
   
   event SwapAndLiquifyEnabledUpdated(bool enabled);
   event LiquidityAdded(uint256 tokenAmount, uint256 bnbAmount);
@@ -191,6 +191,7 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
+        require(_allowances[sender][_msgSender()] >= amount, "Not allowed amount");
         _transfer(sender, recipient, amount);
         _approve(sender, _msgSender(), _allowances[sender][_msgSender()] - amount);
         return true;
@@ -204,6 +205,7 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external virtual returns (bool)
     {
+        require(_allowances[_msgSender()][spender] >= subtractedValue, "Not allowed amount");
         _approve(_msgSender(), spender, _allowances[_msgSender()][spender] - subtractedValue);
         return true;
     }
@@ -253,6 +255,7 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
      */   
     function includeInReward(address account) external onlyOwner() {
         require(_isExcluded[account], "Account is not excluded");
+        uint256 length = _excluded.length;
         for (uint256 i = 0; i < _excluded.length; i++) {
             if (_excluded[i] == account) {
                 _excluded[i] = _excluded[_excluded.length - 1];
@@ -272,6 +275,8 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
         uint256 tFee, 
         uint256 tLiquidity
         ) = _getValues(tAmount);
+        require(_tOwned[sender] >= tAmount, "Not enough Balance");
+        require(_rOwned[sender] >= rAmount, "Not enough Balance");
         _tOwned[sender] = _tOwned[sender] - tAmount;
         _rOwned[sender] = _rOwned[sender] - rAmount;
         _tOwned[recipient] = _tOwned[recipient] + tTransferAmount;
@@ -537,6 +542,7 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
             uint256 tFee,
             uint256 tLiquidity
         ) = _getValues(tAmount);
+        require(_rOwned[sender] >= rAmount, "Not Enough Balance");
         _rOwned[sender] = _rOwned[sender] - rAmount;
         _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;
         _takeLiquidity(tLiquidity);
@@ -553,6 +559,7 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
             uint256 tFee, 
             uint256 tLiquidity
         ) = _getValues(tAmount);
+        require(_rOwned[sender] >= rAmount, "Not Enough Balance");
         _rOwned[sender] = _rOwned[sender] - rAmount;
         _tOwned[recipient] = _tOwned[recipient] + tTransferAmount;
         _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;           
@@ -570,6 +577,8 @@ contract HexaFinityTokenUpgradable is Initializable, IERC20Upgradeable, OwnableU
             uint256 tFee, 
             uint256 tLiquidity
         ) = _getValues(tAmount);
+        require(_tOwned[sender] >= tAmount, "Not Enough Balance");
+        require(_rOwned[sender] >= rAmount, "Not Enough Balance");
         _tOwned[sender] = _tOwned[sender] - tAmount;
         _rOwned[sender] = _rOwned[sender] - rAmount;
         _rOwned[recipient] = _rOwned[recipient] + rTransferAmount;
