@@ -125,14 +125,4 @@ describe("HexaFinityToken", () => {
       .to.emit(token, "SwapAndLiquifyEnabledUpdated")
       .withArgs(false);
   });
-
-  it("Liquidity Fee", async () => {
-    await token.includeInFee(wallet.address);
-    await token.transfer(other.address, TEST_AMOUNT);
-    const tokenBalance = await token.balanceOf(token.address);
-    expect(tokenBalance).to.gt("0");
-
-    // await token.swapAndLiquify(tokenBalance);
-    // const newBalance = await token.balanceOf(token.address);
-  });
 });

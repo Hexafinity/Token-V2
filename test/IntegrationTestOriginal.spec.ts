@@ -5,6 +5,7 @@ import { BigNumber, utils } from 'ethers';
 import { expandTo18Decimals } from './shared/utilities';
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import UniswapV2Router02 from "./V2/UniswapV2Router02.json"
+import { Provider } from "@ethersproject/providers";
 
 describe("Integration tests for original token", () => {
     let token: Contract;
@@ -30,9 +31,9 @@ describe("Integration tests for original token", () => {
         let transferAmount = expandTo18Decimals(1)
         await token.connect(user0).transfer(user1.address, transferAmount);
         expect(await token.balanceOf(taxReceiver.address)).to.gt(0);
-        let user1_balance = await token.balanceOf(taxReceiver.address);
+        let user1Balance = await token.balanceOf(user1.address);
         await token.connect(user0).transfer(user2.address, transferAmount);
-        expect(await token.balanceOf(user1.address)).to.gt(user1_balance);
+        expect(await token.balanceOf(user1.address)).to.gt(user1Balance);
     });
 
     it('addLiquidityToPancakeSwap', async () => {
@@ -43,7 +44,7 @@ describe("Integration tests for original token", () => {
         const WETH = await PancakeSwap.WETH();
         await PancakeSwap.swapETHForExactTokens(10**15, [WETH, token.address], user0.address, constants.MaxUint256, {"value": expandTo18Decimals(1)})
     });
-    
+
     it('tradingOnPancakeSwap', async () => {
         const ABI = UniswapV2Router02.abi;
         const PancakeSwap = await hre.ethers.getContractAt(ABI, ROUTER, admin);
@@ -58,4 +59,19 @@ describe("Integration tests for original token", () => {
         await token.connect(user1).approve(PancakeSwap.address, balance1);
         await PancakeSwap.connect(user0).swapExactTokensForETHSupportingFeeOnTransferTokens(balance0, 0, [token.address, WETH], user0.address, constants.MaxUint256)
     });
+
+    //Make swapandliquidity function public and test it
+    // it('test Swap and Liquify', async () => {
+    //     const ABI = UniswapV2Router02.abi;
+    //     const PancakeSwap = await hre.ethers.getContractAt(ABI, ROUTER, admin);
+    //     await token.approve(PancakeSwap.address, TEST_AMOUNT);
+    //     await PancakeSwap.addLiquidityETH(token.address, TEST_AMOUNT, 0, 0, admin.address, constants.MaxUint256, {"value": expandTo18Decimals(1)});
+
+    //     await token.transfer(user0.address, TEST_AMOUNT)
+    //     const transferAmount = expandTo18Decimals(1)
+    //     await token.connect(user0).transfer(user1.address, transferAmount);
+    //     let contractBalance = await token.balanceOf(token.address);
+    //     await token.swapAndLiquify(contractBalance)
+    //     expect(contractBalance).to.gt(await token.balanceOf(token.address));
+    // });
 });
